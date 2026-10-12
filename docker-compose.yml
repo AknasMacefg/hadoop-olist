@@ -1,0 +1,63 @@
+services:
+  namenode:
+    build: .
+    platform: linux/amd64
+    container_name: namenode
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    ports:
+      - "9870:9870"
+      - "8020:8020"
+    volumes:
+      - ./conf:/opt/hadoop/etc/hadoop:ro
+      - ./data:/data
+    environment:
+      - ENSURE_NAMENODE_DIR=/tmp/hadoop-root/dfs/name
+    networks:
+      - hadoop-net
+
+  datanode:
+    build: .
+    platform: linux/amd64
+    container_name: datanode
+    hostname: datanode
+    command: ["hdfs", "datanode"]
+    depends_on:
+      - namenode
+    volumes:
+      - ./conf:/opt/hadoop/etc/hadoop:ro
+      - ./data:/data
+    networks:
+      - hadoop-net
+
+  resourcemanager:
+    build: .
+    platform: linux/amd64
+    container_name: resourcemanager
+    hostname: resourcemanager
+    command: ["yarn", "resourcemanager"]
+    ports:
+      - "8088:8088"
+    depends_on:
+      - namenode
+    volumes:
+      - ./conf:/opt/hadoop/etc/hadoop:ro
+    networks:
+      - hadoop-net
+
+  nodemanager:
+    build: .
+    platform: linux/amd64
+    container_name: nodemanager
+    hostname: nodemanager
+    command: ["yarn", "nodemanager"]
+    depends_on:
+      - resourcemanager
+    volumes:
+      - ./conf:/opt/hadoop/etc/hadoop:ro
+    networks:
+      - hadoop-net
+
+networks:
+  hadoop-net:
+    driver: bridge
